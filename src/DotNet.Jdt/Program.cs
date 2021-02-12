@@ -21,7 +21,7 @@ namespace DotNet.Jdt
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        [Option(Description = "The base json file path")]
+        [Option(Description = "Source json file path")]
         [FileExists]
         [LegalFilePath]
         public string Source
@@ -29,10 +29,10 @@ namespace DotNet.Jdt
             get; set;
         }
 
-        [Option(Description = "The jdt transformation file path")]
+        [Option(Description = "Jdt transformation file path")]
         [FileExists]
         [LegalFilePath]
-        public string Tranform
+        public string Transform
         {
             get; set;
         }
@@ -47,15 +47,15 @@ namespace DotNet.Jdt
         public static int Main(string[] args)
         {
             var services = new ServiceCollection()
-                            .AddLogging(cfg =>
-                            {
-                                cfg.SetMinimumLevel(LogLevel.Information);
-                                cfg.AddConsole();
-                            })
-                            .AddSingleton<IJsonTransformationLogger, JsonTransformationLogger>()
-                            .AddSingleton<IJsonTransformer, JsonTransformer>()
-                            .AddSingleton<Program>()
-                            .BuildServiceProvider();
+                .AddLogging(cfg =>
+                {
+                    cfg.SetMinimumLevel(LogLevel.Information);
+                    cfg.AddConsole();
+                })
+                .AddSingleton<IJsonTransformationLogger, JsonTransformationLogger>()
+                .AddSingleton<IJsonTransformer, JsonTransformer>()
+                .AddSingleton<Program>()
+                .BuildServiceProvider();
 
             var app = new CommandLineApplication<Program>();
             app.Conventions
@@ -67,23 +67,23 @@ namespace DotNet.Jdt
 
         private void OnExecute()
         {
-            if (string.IsNullOrWhiteSpace(Source) || string.IsNullOrWhiteSpace(Tranform) || string.IsNullOrWhiteSpace(Output))
+            if (string.IsNullOrWhiteSpace(Source) || string.IsNullOrWhiteSpace(Transform) || string.IsNullOrWhiteSpace(Output))
             {
                 _app.ShowHelp();
                 return;
             }
 
-            _logger.LogInformation("Starting tranformation of {input} using {transform} to {output}", Source, Tranform, Output);
+            _logger.LogInformation("Starting transformation of {input} using {transform} to {output}", Source, Transform, Output);
 
             using (var inputStream = new FileStream(Source, FileMode.Open, FileAccess.Read, FileShare.Read))
-            using (var transformStream = new FileStream(Tranform, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var transformStream = new FileStream(Transform, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var outputStream = _jsonTransformer.Transform(inputStream, transformStream))
             using (var destinationStream = new FileStream(Output, FileMode.Create, FileAccess.Write, FileShare.Write))
             {
                 outputStream.CopyTo(destinationStream);
             }
 
-            _logger.LogInformation("File succesfully transformed");
+            _logger.LogInformation("File successfully transformed");
         }
     }
 }
